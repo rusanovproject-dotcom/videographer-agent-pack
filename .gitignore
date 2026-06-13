@@ -1,0 +1,32 @@
+# Видеограф-пак — что НЕ попадает в репо
+
+# Секреты и окружение
+*.env
+.env.*
+!.env.example
+
+# Remotion: зависимости и рендеры (ставятся/генерятся на месте)
+agent/remotion-studio/node_modules/
+agent/remotion-studio/out/
+node_modules/
+
+# Временные медиа (исходники/рендеры монтажа)
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.m4a
+*.srt
+*.vtt
+/tmp/
+
+# Системное
+.DS_Store
+__pycache__/
+*.pyc
+*.log
+
+# ПРИМЕЧАНИЕ: agent/memory.md, failures.md, overrides.md едут в репо как ПУСТЫЕ ШАБЛОНЫ.
+# В своём офисе наполняй их — но если содержат личное, не пушь в публичный форк.

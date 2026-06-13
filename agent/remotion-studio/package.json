@@ -1,0 +1,39 @@
+{
+  "name": "videographer-remotion-studio",
+  "version": "1.0.0",
+  "description": "Remotion motion graphics studio — Terminal Noir style. Videographer agent graphics layer.",
+  "main": "src/index.ts",
+  "scripts": {
+    "studio": "npx remotion studio",
+    "render": "node render.mjs",
+    "compositions": "npx remotion compositions src/index.ts",
+    "render:titlecard": "node render.mjs TitleCard out/titlecard.mov",
+    "render:lowerthird": "node render.mjs LowerThird out/lowerthird.mov",
+    "render:stepper": "node render.mjs ProgressStepper out/stepper.mov",
+    "render:timer": "node render.mjs CountUpTimer out/timer.mov",
+    "render:kinetic": "node render.mjs KineticText out/kinetictext.mov",
+    "render:quote": "node render.mjs QuoteCard out/quotecard.mov",
+    "render:chapter": "node render.mjs ChapterWipe out/chapterwipe.mov",
+    "render:cta": "node render.mjs CTAScreen out/ctascreen.mov",
+    "render:callout": "node render.mjs Callout out/callout.mov",
+    "render:error": "node render.mjs ErrorBadge out/errorbadge.mov",
+    "render:map": "node render.mjs MapEurope out/mapeurope.mov",
+    "render:icons": "node render.mjs IconRow out/iconrow.mov",
+    "render:png": "node render.mjs TitleCard out/titlecard.png --png"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.293",
+    "@remotion/google-fonts": "^4.0.293",
+    "remotion": "^4.0.293"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.29",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.3"
+  },
+  "remotion": {
+    "entryPoint": "./src/index.ts"
+  },
+  "license": "BUSL-1.1"
+}

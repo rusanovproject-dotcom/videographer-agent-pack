@@ -1,0 +1,195 @@
+---
+title: "Videographer — Архитектура агента"
+---
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#1a1a2e', 'primaryTextColor': '#e6edf3', 'primaryBorderColor': '#58a6ff', 'lineColor': '#8b949e', 'secondaryColor': '#161b22', 'tertiaryColor': '#0d1117', 'noteTextColor': '#e6edf3', 'noteBkgColor': '#1c2128', 'noteBorderColor': '#30363d', 'actorTextColor': '#e6edf3', 'actorBkg': '#161b22', 'actorBorder': '#58a6ff'}}}%%
+
+graph TB
+    subgraph OFFICE["AI-офис — команда"]
+        direction TB
+        NIKITA["👤 Владелец"]
+        DIR["🎯 Director"]
+        PROD["📊 Producer"]
+        DESIGN["🎨 Designer"]
+
+        NIKITA --> DIR
+        DIR --> VID
+        PROD -.->|"контент-план"| VID
+        VID -.->|"обложки, превью"| DESIGN
+    end
+
+    subgraph VID["🎬 VIDEOGRAPHER — Режиссёр монтажа"]
+        direction TB
+
+        BRAIN["CLAUDE.md v2\n≤120 строк | sonnet\n@soul.md | EDL-паттерн"]
+
+        subgraph KNOWLEDGE["📚 Knowledge Base"]
+            TOOL["toolchain.md\nFFmpeg, Deepgram,\nmcp-video (P1), Remotion,\nMCP P1/P2/P3, антипаттерны"]
+            PATTERNS["montage-patterns.md\nScoring 1-10 + Virality Scoring\n8 типов для Shorts/Reels"]
+            EDLSCHEMA["edl-schema.md\nEDL JSON-схема\nтрансляция EDL→mcp-video\nself-eval loop"]
+            FORMATS["formats.md\nПараметры платформ\nYouTube/Shorts/Reels/TikTok\nкоманды нормализации"]
+            EVOLVING["evolving/lessons.md\nСамообучение:\nчто работало,\nчто нет"]
+            SOUL["soul.md\nФилософия монтажа\nдефолты стиля\nистория изменений"]
+        end
+
+        BRAIN --> KNOWLEDGE
+    end
+
+    subgraph PIPELINE["⚡ Pipeline — 4 фазы"]
+        direction LR
+
+        subgraph P1["Фаза 1: ANALYZE"]
+            direction TB
+            A1["ffprobe\nметаданные"]
+            A2["Deepgram\nтранскрипция"]
+            A3["silencedetect\nкарта тишины"]
+            A4["PySceneDetect\nграницы сцен"]
+            A5["Кейфреймы\nвизуальный анализ"]
+            A6["🗺️ analysis-map.json\nкарта мясных моментов"]
+
+            A1 --> A6
+            A2 --> A6
+            A3 --> A6
+            A4 --> A6
+            A5 --> A6
+        end
+
+        subgraph P15["Фаза 1.5: EDL (НОВЫЙ P1)"]
+            direction TB
+            E1["Разбор analysis-map\nвыбор сегментов"]
+            E2["Построение edl.json\nstart/end/score/type"]
+            E3["Self-eval loop\n3 оси (Adherence/Pacing/Virality)\nmax 2 retry"]
+            E4["✋ Human Checkpoint\nпоказать план → ОК"]
+
+            E1 --> E2
+            E2 --> E3
+            E3 --> E4
+        end
+
+        subgraph P2["Фаза 2: CUT (обновлён)"]
+            direction TB
+            C1["Читает edl.json"]
+            C2["mcp-video trim\nнарезка сегментов"]
+            C3["mcp-video silence-remove\nудаление тишины"]
+            C4["mcp-video speed\nускорение x4"]
+            C5["mcp-video concat\nсклейка"]
+            C6["FFmpeg fallback\n(только если mcp-video недоступен)"]
+
+            C1 --> C2
+            C2 --> C3
+            C3 --> C4
+            C4 --> C5
+            C5 -.->|fallback| C6
+        end
+
+        subgraph P3["Фаза 3: ASSEMBLE"]
+            direction TB
+            S1["Нормализация\n1920x1080 30fps"]
+            S2["Deepgram → .srt\nсубтитры"]
+            S3["xfade/crossfade\nпереходы"]
+            S4["drawtext\nintro/outro"]
+            S5["🎬 output.mp4\nфинальное видео"]
+
+            S1 --> S3
+            S2 --> S5
+            S3 --> S4
+            S4 --> S5
+        end
+
+        subgraph PSHORTS["SHORTS pipeline (НОВЫЙ P1)"]
+            direction TB
+            SH1["video-analyze\n(shorts mode)"]
+            SH2["Virality Scoring\n8 типов, порог ≥8"]
+            SH3["video-edl\n(shorts EDL)"]
+            SH4["video-cut\n(mcp-video)"]
+            SH5["mcp-video crop\n9:16 auto-reframe"]
+            SH6["Hormozi субтитры"]
+            SH7["🎬 shorts-output.mp4"]
+
+            SH1 --> SH2 --> SH3 --> SH4 --> SH5 --> SH6 --> SH7
+        end
+
+        subgraph P4["Фаза 4: LESSON\n(оркестратор)"]
+            direction TB
+            L1["Подготовка\nинструменты + workdir"]
+            L2["→ video-analyze"]
+            L3["⏸️ Checkpoint\nсогласование карты"]
+            L4["→ video-cut"]
+            L5["→ video-assemble"]
+            L6["📦 Доставка\nфайл + отчёт"]
+
+            L1 --> L2
+            L2 --> L3
+            L3 --> L4
+            L4 --> L5
+            L5 --> L6
+        end
+
+        P1 -->|"analysis-map.json"| P15
+        P15 -->|"edl.json + ОК"| P2
+        P2 -->|"assembled.mp4"| P3
+    end
+
+    VID --> PIPELINE
+
+    subgraph INPUT["📥 Входы"]
+        RAW["Raw видео\n.mp4 .mkv .webm .mov"]
+        PARAMS["Параметры\nхронометраж, стиль,\nязык, заголовок"]
+    end
+
+    subgraph OUTPUT["📤 Выходы"]
+        MP4["🎬 video-edited.mp4"]
+        SRT["📝 video-edited.srt"]
+        REPORT["📊 video-report.md"]
+    end
+
+    INPUT --> VID
+    P3 --> OUTPUT
+
+    subgraph SCORING["🎯 Scoring — что считать мясом"]
+        direction TB
+        S10["10 — Демонстрация результата"]
+        S9["9 — Инсайт/открытие"]
+        S8["8 — Решение проблемы / Эмоция"]
+        S7["7 — Объяснение концепции"]
+        S6["6 — Переход к новому этапу"]
+        LINE["─ ─ ─ ПОРОГ ─ ─ ─"]
+        S4X["4 — Работа с комментариями"]
+        S2X["2 — Работа без комментариев"]
+        S0["0 — Тишина"]
+
+        S10 --- S9
+        S9 --- S8
+        S8 --- S7
+        S7 --- S6
+        S6 --- LINE
+        LINE --- S4X
+        S4X --- S2X
+        S2X --- S0
+    end
+
+    subgraph TOOLS["🔧 Инструменты"]
+        direction LR
+        FF["FFmpeg\nнарезка, склейка,\nфильтры, субтитры"]
+        WH["Deepgram\nтранскрипция\nru/en"]
+        PS["PySceneDetect\nсмена сцен"]
+        AE["auto-editor\nудаление тишины"]
+        ED["Editly\nJSON-монтаж"]
+    end
+
+    TOOLS -.-> PIPELINE
+
+    classDef agent fill:#1a1a2e,stroke:#58a6ff,stroke-width:2px,color:#e6edf3
+    classDef phase fill:#161b22,stroke:#3fb950,stroke-width:2px,color:#e6edf3
+    classDef tool fill:#1c2128,stroke:#d29922,stroke-width:1px,color:#e6edf3
+    classDef input fill:#0d1117,stroke:#8b949e,stroke-width:1px,color:#e6edf3
+    classDef output fill:#1a2332,stroke:#3fb950,stroke-width:2px,color:#e6edf3
+    classDef score fill:#1c2128,stroke:#bc8cff,stroke-width:1px,color:#e6edf3
+    classDef highlight fill:#2d1f0e,stroke:#d29922,stroke-width:2px,color:#e6edf3
+
+    class VID,BRAIN agent
+    class P1,P2,P3,P4 phase
+    class FF,WH,PS,AE,ED tool
+    class RAW,PARAMS input
+    class MP4,SRT,REPORT output
+    class S10,S9,S8,S7,S6,S4X,S2X,S0 score
+    class A6,C5,S5 highlight
